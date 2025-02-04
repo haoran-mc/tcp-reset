@@ -14,7 +14,7 @@ import (
 
 func main() {
 	// 黑白名单
-	util.GetTargetList(config.Conf.IPs)
+	util.InitAllowDenyIPList()
 
 	// 镜像网卡流量
 	mirrorHandle, err := pcap.OpenLive(config.Conf.MirrorNic, 9000, true, time.Microsecond)
@@ -24,19 +24,19 @@ func main() {
 	defer mirrorHandle.Close()
 
 	// 阻断网卡流量
-	sendHandle, err := pcap.OpenLive(config.Conf.BlockNic, 9000, false, time.Microsecond)
+	blockHandle, err := pcap.OpenLive(config.Conf.BlockNic, 9000, false, time.Microsecond)
 	if err != nil {
 		log.Panicf("fail to listen send nic: %v", err)
 	}
-	defer sendHandle.Close()
+	defer blockHandle.Close()
 
 	// init send packet channel
 	ch := make(chan [2]gopacket.Packet)
-	go packet.SendResetPacket(sendHandle, ch)
+	go packet.SendResetPacket(blockHandle, ch)
 
 	// Capture Live Traffic
 	packetSource := gopacket.NewPacketSource(mirrorHandle, mirrorHandle.LinkType())
 	for pkt := range packetSource.Packets() {
-		go packet.AnalysePacket(pkt, sendHandle, ch)
+		go packet.AnalysePacket(pkt, blockHandle, ch)
 	}
 }
