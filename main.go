@@ -8,6 +8,7 @@ import (
 	"github.com/google/gopacket/pcap"
 
 	"github.com/haoran-mc/tcp-reset/config"
+	_ "github.com/haoran-mc/tcp-reset/log"
 	"github.com/haoran-mc/tcp-reset/packet"
 	"github.com/haoran-mc/tcp-reset/util"
 )
