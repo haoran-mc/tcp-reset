@@ -1,4 +1,4 @@
-*** TCP 的 9 个标志位
+*** 一、TCP 标志位
 - URG（紧急 Urgent）：标记数据包中有紧急数据，应优先处理，配合紧急指针（Urgent Pointer）使用。
 - ACK（确认 Acknowledgment）：表示 ack 字段有效，通常用于确认已收到的数据。
 - PSH（推送 Push）：让接收方尽快将数据交给应用层，而不是等缓冲区填满后再处理。
@@ -9,5 +9,7 @@
 - CWR（Congestion Window Reduced）：发送方接收到 ECE 后，降低拥塞窗口，并用 CWR 标志通知对方。
 - NS（Nonce Sum）：用于 ECN 扩展，以提高数据包的完整性校验。
 
-*** TCP 三次握手
-[[file:res/1738578442.png]]
+[[file:res/1738748957.png]]
+
+TCP 标志位设置情况举例：
+[[file:res/1738748458.png]]
