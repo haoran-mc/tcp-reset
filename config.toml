@@ -1,6 +1,3 @@
 log-level = "info"
-
 mirror-nic = "en0"
-block-nic = "en0"
-
 ip-list = "res/black-white-ips.txt"

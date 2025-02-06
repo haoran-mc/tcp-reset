@@ -93,7 +93,7 @@ func SendPacket(handle *pcap.Handle, ch chan gopacket.Packet) {
 	}
 }
 
-func AnalysePacket(packet gopacket.Packet, handleMgt *pcap.Handle, ch chan gopacket.Packet) {
+func AnalysePacket(packet gopacket.Packet, ch chan gopacket.Packet) {
 	// ipv4
 	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
 		ip, _ := ipLayer.(*layers.IPv4)

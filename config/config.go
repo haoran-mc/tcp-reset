@@ -10,7 +10,6 @@ import (
 type tomlConfig struct {
 	LogLevel  string `toml:"log-level"`
 	MirrorNic string `toml:"mirror-nic"`
-	BlockNic  string `toml:"block-nic"`
 	IPs       string `toml:"ip-list"`
 }
 
