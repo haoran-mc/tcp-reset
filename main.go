@@ -14,9 +14,9 @@ import (
 )
 
 func main() {
-	util.InitAllowDenyIPList() // IP 黑名单
+	util.InitBlockIPs() // IP 黑名单
 
-	handle, err := pcap.OpenLive(config.Conf.MirrorNic, 9000, true, time.Microsecond)
+	handle, err := pcap.OpenLive(config.Conf.Nic, 9000, true, time.Microsecond)
 	if err != nil {
 		log.Panicf("fail to listen mirror nic: %v", err)
 	}

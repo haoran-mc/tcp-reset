@@ -8,9 +8,9 @@ import (
 )
 
 type tomlConfig struct {
-	LogLevel  string `toml:"log-level"`
-	MirrorNic string `toml:"mirror-nic"`
-	IPs       string `toml:"ip-list"`
+	LogLevel string `toml:"log-level"`
+	Nic      string `toml:"nic"`
+	BlockIPs string `toml:"block-ips"`
 }
 
 var Conf = new(tomlConfig)

@@ -99,7 +99,7 @@ func AnalysePacket(packet gopacket.Packet, ch chan gopacket.Packet) {
 		ip, _ := ipLayer.(*layers.IPv4)
 
 		// 黑名单
-		if util.MatchIP(ip.SrcIP.String(), util.BLACK) || util.MatchIP(ip.DstIP.String(), util.BLACK) {
+		if util.InBlockIPs(ip.SrcIP.String()) || util.InBlockIPs(ip.DstIP.String()) {
 			fakePacket := forgePacket(packet)
 			if fakePacket != nil {
 				ch <- fakePacket
