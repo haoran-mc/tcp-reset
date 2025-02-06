@@ -32,8 +32,8 @@ func main() {
 	defer blockHandle.Close()
 
 	// init send packet channel
-	ch := make(chan [2]gopacket.Packet)
-	go packet.SendResetPacket(blockHandle, ch)
+	ch := make(chan gopacket.Packet)
+	go packet.SendPacket(blockHandle, ch)
 
 	// Capture Live Traffic
 	packetSource := gopacket.NewPacketSource(mirrorHandle, mirrorHandle.LinkType())
