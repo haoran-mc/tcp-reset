@@ -18,7 +18,7 @@ func main() {
 
 	handle, err := pcap.OpenLive(config.Conf.Nic, 9000, true, time.Microsecond)
 	if err != nil {
-		log.Panicf("fail to listen mirror nic: %v", err)
+		log.Fatalf("fail to listen mirror nic: %v", err)
 	}
 	defer handle.Close()
 

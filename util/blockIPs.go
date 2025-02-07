@@ -2,6 +2,7 @@ package util
 
 import (
 	"bufio"
+	"log"
 	"os"
 	"strings"
 
@@ -13,9 +14,9 @@ var blockIPs map[string]struct{}
 func InitBlockIPs() {
 	blockIPs = make(map[string]struct{})
 
-	f, err := os.Open(config.Conf.blockIPs)
+	f, err := os.Open(config.Conf.BlockIPs)
 	if err != nil {
-		panic(err)
+		log.Fatalf("fail to open blacklisted file: %v", err)
 	}
 	defer f.Close()
 
@@ -28,7 +29,7 @@ func InitBlockIPs() {
 		blockIPs[ip] = struct{}{}
 	}
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		log.Fatalf("scanner scan error: %v", err)
 	}
 }
 
