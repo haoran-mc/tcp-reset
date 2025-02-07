@@ -53,8 +53,8 @@ func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg []strin
 			tcp.SYN = false
 			tcp.RST = true
 			tcp.ACK = false
-			tcp.Ack = 0
 			tcp.Seq = tcp.Ack
+			tcp.Ack = 0
 
 		default:
 			return nil, append(logMsg, fmt.Sprintf("[Do nothing] Traffic packet with these states: "+
