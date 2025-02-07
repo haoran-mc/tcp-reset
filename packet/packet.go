@@ -89,17 +89,7 @@ func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg []strin
 		ip.SrcIP.String()+":"+tcp.SrcPort.String(), ip.DstIP.String()+":"+tcp.DstPort.String(), tcp.Seq, tcp.Ack))
 }
 
-func SendPacket(handle *pcap.Handle, ch chan gopacket.Packet) {
-	for {
-		pkt := <-ch
-		fmt.Println("───── send packet: ", pkt)
-		if err := handle.WritePacketData(pkt.Data()); err != nil {
-			slog.Error("fail to send packet", "error", err.Error())
-		}
-	}
-}
-
-func AnalysePacket(packet gopacket.Packet, ch chan gopacket.Packet) {
+func AnalysePacket(handle *pcap.Handle, packet gopacket.Packet) {
 	// eth
 	if ethLayer := packet.Layer(layers.LayerTypeEthernet); ethLayer != nil {
 		eth, _ := ethLayer.(*layers.Ethernet)
@@ -116,7 +106,10 @@ func AnalysePacket(packet gopacket.Packet, ch chan gopacket.Packet) {
 				if util.InBlockIPs(ip.SrcIP.String()) || util.InBlockIPs(ip.DstIP.String()) {
 					fakePacket, logMsg := forgePacket(packet)
 					if fakePacket != nil {
-						ch <- fakePacket
+						// Send forge packet
+						if err := handle.WritePacketData(fakePacket.Data()); err != nil {
+							slog.Error("fail to send packet", "error", err.Error())
+						}
 					}
 
 					fmt.Println("[" + time.Now().Format(time.RFC3339) + "]" + " Received a piece of traffic from blacklist:" +

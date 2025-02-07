@@ -22,13 +22,9 @@ func main() {
 	}
 	defer handle.Close()
 
-	// init send packet channel
-	ch := make(chan gopacket.Packet)
-	go packet.SendPacket(handle, ch)
-
 	// capture live traffic
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	for pkt := range packetSource.Packets() {
-		go packet.AnalysePacket(pkt, ch)
+		packet.AnalysePacket(handle, pkt)
 	}
 }
