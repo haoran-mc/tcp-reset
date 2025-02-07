@@ -35,7 +35,7 @@ func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg []strin
 		tcp.NS = false
 
 		switch {
-		case tcp.SYN && !tcp.ACK: // 一次握手，客户端发送 SYN 请求建立连接
+		case tcp.SYN && !tcp.ACK: // 一次握手，客户端发送 SYN 请求建立连接 TODO Fail
 			logMsg = append(logMsg, fmt.Sprintf("[First handshake] TCP Seq: %d, TCP Packet length: %d", tcp.Seq, uint32(len(packet.Data()))))
 			tcp.RST = false
 			tcp.SYN = true
@@ -48,7 +48,7 @@ func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg []strin
 			logMsg = append(logMsg, fmt.Sprintf("[Second handshake] TCP Seq: %d, TCP Ack: %d", tcp.Seq, tcp.Ack))
 			return nil, logMsg
 
-		case tcp.ACK && tcp.PSH: // 建立连接后，通信过程中的标志位（TODO 考虑 !tcp.PSH 的情况）
+		case tcp.ACK: // 第三次握手、已建立连接
 			logMsg = append(logMsg, fmt.Sprintf("[Connection establishment] TCP Seq: %d, TCP Ack: %d", tcp.Seq, tcp.Ack))
 			tcp.SYN = false
 			tcp.RST = true
