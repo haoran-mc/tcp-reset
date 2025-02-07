@@ -3,6 +3,7 @@ package packet
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/gopacket"
@@ -11,7 +12,7 @@ import (
 	"github.com/haoran-mc/tcp-reset/util"
 )
 
-func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg string) {
+func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg []string) {
 	ethLayer := packet.Layer(layers.LayerTypeEthernet)
 	eth, _ := ethLayer.(*layers.Ethernet)
 
@@ -22,7 +23,7 @@ func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg string)
 	tcp, _ := tcpLayer.(*layers.TCP)
 
 	if tcp.RST || tcp.FIN {
-		return nil, "[Info] RST or FIN packet"
+		return nil, append(logMsg, "[Info] RST or FIN packet")
 	}
 
 	{ // tcp flags
@@ -35,30 +36,30 @@ func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg string)
 
 		switch {
 		case tcp.SYN && !tcp.ACK: // 一次握手，客户端发送 SYN 请求建立连接
+			logMsg = append(logMsg, fmt.Sprintf("[First handshake] TCP Seq: %d, TCP Packet length: %d", tcp.Seq, uint32(len(packet.Data()))))
 			tcp.RST = false
 			tcp.SYN = true
 			tcp.ACK = true
 			tcp.Ack = tcp.Seq + uint32(len(packet.Data()))
-			logMsg = fmt.Sprintf("[First handshake] TCP Sequence number: %d, Packet length: %d, Forge packet Ack: %d", tcp.Seq, uint32(len(packet.Data())), tcp.Ack)
 			tcp.Seq = 0
 
 		case tcp.SYN && tcp.ACK: // 二次握手，服务端接受连接
 			// do nothing
-			logMsg = "[Second handshake] Do nothing"
+			logMsg = append(logMsg, fmt.Sprintf("[Second handshake] TCP Seq: %d, TCP Ack: %d", tcp.Seq, tcp.Ack))
 			return nil, logMsg
 
 		case tcp.ACK && tcp.PSH: // 建立连接后，通信过程中的标志位（TODO 考虑 !tcp.PSH 的情况）
+			logMsg = append(logMsg, fmt.Sprintf("[Connection establishment] TCP Seq: %d, TCP Ack: %d", tcp.Seq, tcp.Ack))
 			tcp.SYN = false
 			tcp.RST = true
 			tcp.ACK = false
 			tcp.Ack = 0
-			logMsg = fmt.Sprintf("[Connection establishment] TCP Sequence number: %d, Forge packet Ack: %d, Forge packet Seq: %d", tcp.Seq, 0, 0)
 			tcp.Seq = tcp.Ack
 
 		default:
-			return nil, fmt.Sprintf("[Info] No processing is done on traffic packets in this state: "+
+			return nil, append(logMsg, fmt.Sprintf("[Do nothing] Traffic packet with these states: "+
 				"URG:%t ACK:%t PSH:%t RST:%t SYN:%t FIN:%t ECE:%t CWR:%t NS:%t",
-				tcp.URG, tcp.ACK, tcp.PSH, tcp.RST, tcp.SYN, tcp.FIN, tcp.ECE, tcp.CWR, tcp.NS)
+				tcp.URG, tcp.ACK, tcp.PSH, tcp.RST, tcp.SYN, tcp.FIN, tcp.ECE, tcp.CWR, tcp.NS))
 		}
 	}
 
@@ -84,12 +85,14 @@ func forgePacket(packet gopacket.Packet) (retPkt gopacket.Packet, logMsg string)
 		return nil, logMsg
 	}
 	retPkt = gopacket.NewPacket(packetBuffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
-	return
+	return retPkt, append(logMsg, fmt.Sprintf("[Forge packet] From %s to %s, Forge Seq: %d, Forge Ack: %d",
+		ip.SrcIP.String()+":"+tcp.SrcPort.String(), ip.DstIP.String()+":"+tcp.DstPort.String(), tcp.Seq, tcp.Ack))
 }
 
 func SendPacket(handle *pcap.Handle, ch chan gopacket.Packet) {
 	for {
 		pkt := <-ch
+		fmt.Println("───── send packet: ", pkt)
 		if err := handle.WritePacketData(pkt.Data()); err != nil {
 			slog.Error("fail to send packet", "error", err.Error())
 		}
@@ -120,7 +123,7 @@ func AnalysePacket(packet gopacket.Packet, ch chan gopacket.Packet) {
 						fmt.Sprintf("\n\t[Ethernet Layer] Ethernet type: %s, MAC From %s to %s", eth.EthernetType.String(), eth.SrcMAC.String(), eth.DstMAC.String()) +
 						fmt.Sprintf("\n\t[IPv4 Layer] Protocol: %s, IP From %s to %s", ip.Protocol.String(), ip.SrcIP.String(), ip.DstIP.String()) +
 						fmt.Sprintf("\n\t[TCP Layer] From port %d to %d", tcp.SrcPort, tcp.DstPort) +
-						"\n\t" + logMsg)
+						"\n\t" + strings.Join(logMsg, "\n\t"))
 				}
 			}
 		}
